@@ -18,7 +18,7 @@ def get_token(app_key, app_secret, base_url):
     authenticate_url = "{0}{1}".format(base_url, authenticate_uri)
 
     r = requests.get(authenticate_url, auth=HTTPBasicAuth(app_key, app_secret))
-
+    print("Access token-=====",r.json()["access_token"])
     return r.json()["access_token"]
 
 
@@ -207,7 +207,6 @@ def verify_transaction(**kwargs) -> None:
     if not isinstance(checkout_id, str):
         frappe.throw(_("Invalid Checkout Request ID"))
     print("=====================================")
-    print(str(transaction_response))
     integration_request = frappe.get_doc("Integration Request", checkout_id)
     transaction_data = frappe._dict(loads(integration_request.data))
     total_paid = 0  
@@ -251,6 +250,8 @@ def verify_transaction(**kwargs) -> None:
                     mpesa_receipts,
                 )
                 integration_request.handle_success(transaction_response)
+                # print("Here",integration_request.status)
+                frappe.db.commit()
             except Exception:
                 integration_request.handle_failure(transaction_response)
                 frappe.log_error("Mpesa: Failed to verify transaction")
@@ -273,3 +274,9 @@ def verify_transaction(**kwargs) -> None:
             ),
         },
     )
+    
+# def handle_success_response_webshop(pr):
+    
+    
+    
+    

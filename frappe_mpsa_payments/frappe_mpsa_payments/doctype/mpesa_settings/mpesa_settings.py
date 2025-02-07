@@ -102,6 +102,7 @@ class MpesaSettings(Document):
 
                 response = frappe._dict(get_payment_request_response_payload(amount))
             else:
+                print("Arfuments==", args)
                 response = frappe._dict(generate_stk_push(**args))
 
             self.handle_api_response("CheckoutRequestID", args, response)
@@ -168,11 +169,11 @@ class MpesaSettings(Document):
 def generate_stk_push(**kwargs) -> str | Any:
     """Generate stk push by making a API call to the stk push API."""
     args = frappe._dict(kwargs)
-
+    # frappe.throw("hre")
+    handle_response_webshop()
     try:
         callback_url = (
             get_request_site_address(True)
-            # "https://9836-41-80-117-181.ngrok-free.app"
             + "/api/method/frappe_mpsa_payments.frappe_mpsa_payments.api.m_pesa_api.verify_transaction"
         )
 
@@ -195,12 +196,12 @@ def generate_stk_push(**kwargs) -> str | Any:
         # mobile_number = sanitize_mobile_number(args.sender)
         response = connector.stk_push(
             business_shortcode=business_shortcode,
-            amount=args.request_amount,
+            amount=1, #args.request_amount,
             passcode=mpesa_settings.get_password("online_passkey"),
             callback_url=callback_url,
             reference_code=mpesa_settings.till_number,
             phone_number=mobile_number,
-            description="POS Payment",
+            description="Sales Payment",
         )
 
         return response
@@ -390,3 +391,10 @@ def create_mode_of_payment(gateway: str, payment_type: str = "General") -> Docum
         return mode_of_payment
 
     return frappe.get_doc("Mode of Payment", mode_of_payment)
+
+
+def handle_response_webshop():
+    payment_request=frappe.get_doc("Payment Request", "ACC-PRQ-2025-00012")
+    payment_request.run_method("on_payment_authorized", "Completed")
+    
+    
